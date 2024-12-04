@@ -1,0 +1,180 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+    font-family: Arial, sans-serif;
+}
+
+.section {
+    height: 100svh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+
+
+
+.cardContainer {
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.cardRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.card {
+    width: 150px;
+    height: 200px;
+    background-color: #fff;
+    border: 2px solid #333;
+    margin: 20px;
+    transition: transform 1s ease, opacity 1s ease;
+    z-index: 0;
+}
+
+.card:nth-child(2){
+    transition-delay: 200ms;
+}
+
+.card:nth-child(3){
+    transition-delay: 400ms;
+}
+
+.card:nth-child(4){
+    transition-delay: 600ms;
+}
+
+.fly {
+    position: absolute;
+    animation: flyAnimation 2s none; 
+}
+
+@keyframes flyAnimation {
+    0% {
+        transform: translate(0, 0) rotate(0);
+        opacity: 1;
+    }
+    20%{
+        opacity: 1;
+    }
+    40% {
+        transform: translate(0, 71svh) rotate(180deg);
+        opacity: 0.3;
+    }
+    100% {
+        transform: translate(0, 110svh) rotate(180deg);
+        opacity: 0.1;
+    }
+
+}
+
+.hiddenSection{
+    display: none;
+    z-index: 50;
+}
+
+.showSection{
+    display: block;
+    z-index: 50;
+}
+
+.hidden{
+    opacity: 0;
+    transition: all 1s;
+    transform: translateX(-100%);
+    filter:blur(5px);
+}
+
+.show{
+    opacity: 1;
+    filter:blur(0);
+    transform: translateX(0);
+}
+
+
+
+#home, #projects, #contact{
+    background-color: #f0f0f0;
+}
+
+h1 {
+    font-size: 4em;
+    margin: 0.5em;
+}
+nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #333;
+    color: #fff;
+    padding: 1em 0;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+}
+nav a {
+    color: white;
+    margin: 0 1em;
+    text-decoration: none;
+}
+
+@keyframes hideNav {
+    from{
+        opacity: 1;
+    }
+    to{
+        opacity: 0;
+    }
+}
+
+.hideNav{
+    animation: hideNav 1s both;
+}
+
+.showNav{
+    animation: hideNav 0.3s reverse both;
+}
+
+
+.down-button {
+    font-size: 2em;
+    position: absolute;
+    bottom: 2em;
+    cursor: pointer;
+}
+
+iframe{
+    border:0px #000000 none;
+    border:"1";
+    height: 100%;
+    width:100%;
+    z-index: 10;
+}
+
+#unity-webgl-logo{
+    opacity: 0;
+}
+
+#explanation{
+    height: 50svh;
+    text-align: left;
+    padding: 45svh;
+    padding-top: 0%;
+
+}
+
+#explanation h1{
+    text-align: center;
+}
