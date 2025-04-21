@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixiao Kuang | Game Developer Portfolio</title>
-  <!-- Fonts and Devicon -->
+  <title>Contact Me | Lixiao Kuang</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Orbitron:wght@600&display=swap">
   <link rel="stylesheet" href="css/style.css">
@@ -19,7 +17,7 @@
 </head>
 <body>
   <div id="particles-js"></div>
-  <nav class="game-nav" id="navbar">
+  <nav class="game-nav">
     <ul>
       <li><a href="index.html">Home</a></li>
       <li><a href="projects.html">Projects</a></li>
@@ -27,22 +25,25 @@
       <li><a href="contact.html">Contact</a></li>
     </ul>
   </nav>
-  <header class="hero fade-in">
-    <h1>Lixiao Kuang</h1>
-    <h2>Game Developer & Software Engineer</h2>
-    <p>Building interactive worlds. <span class="blink cursor">█</span></p>
-    <div class="hero-icons">
-      <img src="images/unity.png" alt="Unity" title="Unity" class="skill-icon-img">
-      <i class="devicon-cplusplus-plain colored" title="C++"></i>
-      <i class="devicon-csharp-plain colored" title="C#"></i>
-      <i class="devicon-python-plain colored" title="Python"></i>
-      <i class="devicon-java-plain colored" title="Java"></i>
-      <i class="devicon-html5-plain colored" title="HTML"></i>
-      <i class="devicon-css3-plain colored" title="CSS"></i>
-      <i class="devicon-javascript-plain colored" title="Javascript"></i>
-    </div>
-    <a href="projects.html" class="btn main-btn">See My Projects</a>
-  </header>
+  <main class="fade-in">
+    <section class="contact-section">
+      <h2>Contact Me</h2>
+      <p>Want to connect? Send a message below. I'll get back to you as soon as I can!</p>
+
+      <form action="https://formspree.io/f/mldbrjlr" method="POST" class="contact-form">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+
+        <button type="submit" class="btn">Send Message</button>
+      </form>
+    </section>
+  </main>
   <footer>
     <p>© 2024 Lixiao Kuang</p>
   </footer>
