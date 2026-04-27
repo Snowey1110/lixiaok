@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projects | Lixiao Kuang</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+  <title>Experiences | Lixiao Kuang</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Orbitron:wght@600&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <!-- Google tag (gtag.js) -->
@@ -22,49 +21,25 @@
   <nav class="game-nav" id="navbar">
     <ul>
       <li><a href="index.html">Home</a></li>
-      <li><a href="projects.html">Projects</a></li>
+      <li><a href="projects.html">Experiences</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
   </nav>
   <main class="fade-in">
-    <section class="skills">
-      <h2>Skills & Languages</h2>
-      <div class="skill-icons">
-        <img src="images/unity.png" alt="Unity" title="Unity" class="skill-icon-img">
-        <i class="devicon-csharp-plain colored" title="C#"></i>
-        <i class="devicon-cplusplus-plain colored" title="C++"></i>
-        <i class="devicon-python-plain colored" title="Python"></i>
-        <i class="devicon-html5-plain colored" title="HTML5"></i>
-        <i class="devicon-css3-plain colored" title="CSS3"></i>
-        <i class="devicon-javascript-plain colored" title="JavaScript"></i>
-        <i class="devicon-c-plain colored" title="C"></i>
-        <i class="devicon-java-plain colored" title="Java"></i>
-      </div>
-    </section>
     <section class="projects timeline-section" aria-labelledby="timeline-heading">
       <div class="timeline-hero">
         <h2 id="timeline-heading">Experiences & timeline</h2>
         <p class="timeline-lead">
-          Work roles, project experiences, and games — filter by type or search by tag. New entries go in <code class="inline-code">js/timeline-data.js</code>; use <code class="inline-code">status: "draft"</code> until the entry is complete.
+          Reverse-chronological work, project, and game development experience. Use the type filters, tag filters, and search to focus on the roles, skills, and deliverables most relevant to the position you are hiring for.
         </p>
       </div>
 
-      <div class="timeline-filters" role="group" aria-label="Filter by experience type">
-        <span class="filter-label" id="type-filter-label">Show</span>
-        <div class="segmented" role="toolbar" aria-labelledby="type-filter-label">
-          <label class="seg-item">
-            <input type="checkbox" name="timeline-type" value="work" checked>
-            <span>Work</span>
-          </label>
-          <label class="seg-item">
-            <input type="checkbox" name="timeline-type" value="project" checked>
-            <span>Projects</span>
-          </label>
-          <label class="seg-item">
-            <input type="checkbox" name="timeline-type" value="game" checked>
-            <span>Games</span>
-          </label>
+      <div class="timeline-filters" role="group" aria-label="Filter by experience type (all on by default)">
+        <div class="segmented segmented--type" role="toolbar" aria-label="Type filters: Work, Projects, Game Dev">
+          <button type="button" class="seg-btn" data-timeline-type="work" aria-pressed="true">Work</button>
+          <button type="button" class="seg-btn" data-timeline-type="project" aria-pressed="true">Projects</button>
+          <button type="button" class="seg-btn" data-timeline-type="game" aria-pressed="true">Game Dev</button>
         </div>
       </div>
 
@@ -75,19 +50,22 @@
             type="search"
             id="timeline-tag-filter"
             class="tag-filter-input"
-            placeholder="e.g. Unity, Leadership, DigiPen"
+            placeholder="Search title, summary, or tags…"
             autocomplete="off"
             spellcheck="false"
           />
-          <button type="button" class="tag-filter-clear" id="timeline-tag-clear">Clear</button>
+          <button type="button" class="tag-filter-clear" id="timeline-tag-clear">Clear all</button>
         </div>
-        <p class="tag-suggestions-hint" id="tag-suggestions-hint">Quick tags (click to filter):</p>
+        <div class="active-filters" id="timeline-active-tags" hidden aria-label="Active tag filters"></div>
+        <p class="tag-suggestions-hint" id="tag-suggestions-hint">Quick tags (click to add to filters):</p>
         <div class="tag-suggestions" id="timeline-suggested-tags" role="list"></div>
       </div>
 
-      <p class="timeline-empty" id="timeline-empty" hidden>No items match. Try a different type or clear the tag search.</p>
+      <p class="timeline-empty" id="timeline-empty" hidden>
+        No items match, or all type filters are off. Turn a type on above or <a href="projects.html" class="timeline-empty-link">refresh the page</a> to show all three types.
+      </p>
 
-      <div class="timeline" id="timeline-root" role="list" aria-label="Chronological experiences list"></div>
+      <div class="timeline" id="timeline-root" role="list" aria-label="Chronological experiences, newest first"></div>
     </section>
   </main>
   <footer>
