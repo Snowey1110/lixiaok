@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projects | Lixiao Kuang</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Orbitron:wght@600&display=swap">
@@ -21,14 +22,23 @@
   <nav class="game-nav" id="navbar">
     <ul>
       <li><a href="index.html">Home</a></li>
-      <li><a href="projects.html">Projects</a></li>
+      <li><a href="projects.html" aria-current="page">Projects</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
   </nav>
   <main class="fade-in">
-    <section class="skills">
-      <h2>Skills & Languages</h2>
+    <header class="timeline-page-intro">
+      <h1>Experience &amp; project timeline</h1>
+      <p class="timeline-page-lead">
+        Work, projects, and game releases in one place. Filter by category or tag, and add a quick “stub”
+        to remember a role; fill in preview, links, and <code>draft: false</code> in
+        <code>js/timeline-experiences.js</code> when you publish.
+      </p>
+    </header>
+
+    <section class="skills" aria-label="Skill icons">
+      <h2>Skills &amp; languages</h2>
       <div class="skill-icons">
         <img src="images/unity.png" alt="Unity" title="Unity" class="skill-icon-img">
         <i class="devicon-csharp-plain colored" title="C#"></i>
@@ -41,66 +51,112 @@
         <i class="devicon-java-plain colored" title="Java"></i>
       </div>
     </section>
-    <section class="projects">
-      <h2>Projects & Experiences</h2>
-      <div class="project-grid">
 
-        <div class="project-card img-fade-card">
-          <img src="images/udub.png" alt="UDubMinecraft Screenshot" class="card-bgimg" />
-          <h3>UDubMinecraft</h3>
-          <p>
-            As Vice-President of UDub Minecraft (UW Seattle, 2000+ members), I led server operations, managed events, and ensured a welcoming, fair, and creative club community.
-          </p>
-          <div>
-            <span class="chip">Leadership</span>
-            <span class="chip">Project Management</span>
+    <section class="projects timeline-section" aria-labelledby="timeline-heading">
+      <h2 id="timeline-heading">Filter</h2>
+      <p class="timeline-filters__hint">Narrow the timeline by type, then use tags to match skills or tools.</p>
+
+      <div class="timeline-filters" role="search" aria-label="Filter timeline">
+        <div class="filter-row">
+          <span class="filter-label" id="filter-type-label">Show</span>
+          <div class="filter-type" id="filter-type" role="group" aria-labelledby="filter-type-label">
+            <button type="button" class="is-active" data-type="all" aria-pressed="true">All</button>
+            <button type="button" data-type="work" aria-pressed="false">Work</button>
+            <button type="button" data-type="project" aria-pressed="false">Project</button>
+            <button type="button" data-type="game" aria-pressed="false">Game</button>
           </div>
         </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/385Pic.png" alt="Spring is Coming Screenshot" class="card-bgimg" />
-          <h3>Spring is Coming</h3>
-          <p>Unity 2D Tower Defense Team Project</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://snowey1110.github.io/385TeamProject/Final%20Project/" class="btn" target="_blank" rel="noopener">Play Demo</a>
+        <div class="filter-row filter-row--search">
+          <label class="filter-label" for="tag-search">Tag search</label>
+          <input type="search" id="tag-search" class="tag-search-input" placeholder="e.g. Unity, leadership…" autocomplete="off">
         </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/hero.png" alt="Hero Next Generation Screenshot" class="card-bgimg" />
-          <h3>Hero Next Generation</h3>
-          <p>Unity 2D aircraft battle game with boss battle</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://github.com/Snowey1110/CSS385/tree/main/Next%20Generation%20Hero" class="btn" target="_blank" rel="noopener">Play Now!</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/496Pic.png" alt="Project PathER Screenshot" class="card-bgimg" />
-          <h3>Project PathER</h3>
-          <p>Unity 2D Roguelike RPG game prototype</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://github.com/Snowey1110/ProjectPathER" class="btn" target="_blank" rel="noopener">GitHub</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/traversal.png" alt="Traversal Screenshot" class="card-bgimg" />
-          <h3>Traversal</h3>
-          <p>Digipen C++ team project: 3D parkour speedrun game.</p>
-          <div><span class="chip">C++</span></div>
-          <a href="https://drive.google.com/file/d/1_aT4Z8svILOigDedk7etIbKmJJ85XSFH/view?usp=drive_link" class="btn" target="_blank" rel="noopener">Installer</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/tech.png" alt="Tech Academy Screenshot" class="card-bgimg" />
-          <h3>Tech Academy</h3>
-          <p>Teaching coding, robotics & 3D modeling to elementary students.</p>
-          <div>
-            <span class="chip">Python</span>
-            <span class="chip">Java</span>
-            <span class="chip">Robotics</span>
-          </div>
-        </div>
-
+        <div class="filter-row filter-tags" id="timeline-filter-tags" aria-label="Filter by tag"></div>
       </div>
+    </section>
+
+    <section class="projects timeline-block" aria-labelledby="timeline-list-heading">
+      <h2 id="timeline-list-heading" class="sr-only">Timeline</h2>
+      <ol class="timeline" id="timeline-list"></ol>
+    </section>
+
+    <section class="projects add-experience-section" aria-labelledby="add-heading">
+      <h2 id="add-heading">Add an experience (quick entry)</h2>
+      <p class="add-experience-help">
+        Minimum: title, type, and what you did, plus a start (and optional end) date. Anything you add here
+        is saved in <strong>this browser only</strong>. Copy the JSON from “Export my local entries” and
+        merge into <code>js/timeline-experiences.js</code> for the live site, then remove
+        <code>draft: true</code> when the entry is complete.
+      </p>
+      <form class="add-experience-form" id="form-add-experience">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="ex-title">Title *</label>
+            <input type="text" id="ex-title" name="ex-title" required placeholder="e.g. Summer internship — tools team">
+          </div>
+          <div class="form-field">
+            <label for="ex-type">Type *</label>
+            <select id="ex-type" name="ex-type" required>
+              <option value="work">Work / leadership / teaching</option>
+              <option value="project">Project (non-game tool, app, course project)</option>
+              <option value="game">Game project / jam</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="ex-start">Start (year or YYYY-MM)</label>
+            <input type="text" id="ex-start" name="ex-start" inputmode="numeric" placeholder="2024-06">
+          </div>
+          <div class="form-field">
+            <label for="ex-end">End (optional)</label>
+            <input type="text" id="ex-end" name="ex-end" inputmode="numeric" placeholder="2024-08">
+            <label class="checkbox-ongoing"><input type="checkbox" id="ex-ongoing" name="ex-ongoing"> Ongoing (no end date)</label>
+          </div>
+          <div class="form-field form-field--wide">
+            <label for="ex-summary">What you did *</label>
+            <textarea id="ex-summary" name="ex-summary" required rows="3" placeholder="Short summary for the timeline. You can add a longer version in the data file later."></textarea>
+          </div>
+          <div class="form-field form-field--wide">
+            <label for="ex-tags">Tags (comma-separated)</label>
+            <input type="text" id="ex-tags" name="ex-tags" placeholder="Python, C++, Leadership">
+          </div>
+        </div>
+        <details class="add-experience-advanced">
+          <summary>Preview &amp; links (optional, can add later in code)</summary>
+          <div class="form-grid form-grid--2">
+            <div class="form-field">
+              <label for="ex-preview">Preview image path</label>
+              <input type="text" id="ex-preview" name="ex-preview" placeholder="images/shot.png">
+            </div>
+            <div class="form-field">
+              <label for="ex-play">Play / demo URL</label>
+              <input type="url" id="ex-play" name="ex-play" placeholder="https://">
+            </div>
+            <div class="form-field">
+              <label for="ex-playlabel">Button label (play link)</label>
+              <input type="text" id="ex-playlabel" name="ex-playlabel" placeholder="Play now">
+            </div>
+            <div class="form-field">
+              <label for="ex-gh">GitHub URL</label>
+              <input type="url" id="ex-gh" name="ex-gh" placeholder="https://github.com/…">
+            </div>
+            <div class="form-field">
+              <label for="ex-otherurl">Other link</label>
+              <input type="url" id="ex-otherurl" name="ex-otherurl" placeholder="Drive, Itch, etc.">
+            </div>
+            <div class="form-field">
+              <label for="ex-otherlabel">Label for other link</label>
+              <input type="text" id="ex-otherlabel" name="ex-otherlabel" placeholder="Download">
+            </div>
+          </div>
+        </details>
+        <div class="form-actions">
+          <button type="submit" class="btn">Add to timeline</button>
+        </div>
+        <p class="form-saved" id="add-saved-hint" hidden>Added as a <strong>draft</strong> in this browser. Export and merge into <code>js/timeline-experiences.js</code> to publish.</p>
+        <p class="form-secondary-actions">
+          <button type="button" class="btn btn-ghost" id="export-local-btn">Export my local entries (JSON)</button>
+        </p>
+        <textarea class="add-export" id="add-export" hidden readonly rows="6" title="Local timeline JSON" aria-label="Local entries JSON for copy-paste"></textarea>
+      </form>
     </section>
   </main>
   <footer>
@@ -108,6 +164,8 @@
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="js/particles-init.js"></script>
+  <script src="js/timeline-experiences.js"></script>
+  <script src="js/timeline.js"></script>
   <script src="js/fadein.js"></script>
 </body>
 </html>
