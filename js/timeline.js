@@ -1,328 +1,455 @@
 (function () {
   "use strict";
 
-  const TYPE_ALL = "all";
+  var data = window.TIMELINE_EXPERIENCES || [];
+  var container = document.getElementById("timeline-root");
+  var typeSelected = { work: true, project: true, game: true };
+  var typeButtons = document.querySelectorAll(
+    "button.seg-btn[data-timeline-type]"
+  );
+  var tagInput = document.getElementById("timeline-tag-filter");
+  var clearTagBtn = document.getElementById("timeline-tag-clear");
+  var emptyState = document.getElementById("timeline-empty");
+  var tagChips = document.getElementById("timeline-suggested-tags");
+  var activeTagBar = document.getElementById("timeline-active-tags");
 
-  var state = {
-    items: [],
-    category: TYPE_ALL,
-    activeTags: new Set()
-  };
+  /** @type {string[]} normalized lowercase */
+  var activeFilterTags = [];
 
-  function parseMonth(ym) {
-    if (!ym) return 0;
-    var p = String(ym).split("-");
-    if (p.length < 2) return 0;
-    var y = parseInt(p[0], 10) || 0;
-    var m = parseInt(p[1], 10) || 0;
-    return y * 12 + (m - 1);
+  var SPINE_MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
+
+  function parseSortKey(item) {
+    var s = String(item.sortKey || "").trim();
+    if (!s) return 0;
+    if (/^\d{4}(-\d{2}(-\d{2})?)?$/.test(s)) {
+      if (s.length === 4) s += "-01-01";
+      else if (s.length === 7) s += "-01";
+      return new Date(s + "T12:00:00").getTime();
+    }
+    return 0;
   }
 
-  function formatRange(start, end) {
-    if (!start && !end) return "Date TBA";
-    var a = formatMonthLabel(start);
-    if (!end) return a + " \u2013 Present";
-    return a + " \u2013 " + formatMonthLabel(end);
+  function getItemSortDate(item) {
+    var n = parseSortKey(item);
+    if (!n) return null;
+    return new Date(n);
   }
 
-  function formatMonthLabel(ym) {
-    if (!ym) return "";
-    var p = String(ym).split("-");
-    var y = parseInt(p[0], 10);
-    var m = parseInt(p[1], 10) || 1;
-    var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return monthNames[m - 1] + " " + y;
+  function formatSpineMonthYear(d) {
+    if (!d || isNaN(d.getTime())) return "—";
+    return SPINE_MONTHS[d.getMonth()] + " " + d.getFullYear();
   }
 
-  function sortKey(item) {
-    var endM = item.end ? parseMonth(item.end) : 9999 * 12;
-    var startM = item.start ? parseMonth(item.start) : 0;
-    return { end: endM, start: startM };
+  function getSelectedTypes() {
+    var out = [];
+    if (typeSelected.work) out.push("work");
+    if (typeSelected.project) out.push("project");
+    if (typeSelected.game) out.push("game");
+    return out;
   }
 
-  function sortedItems(list) {
-    return list.slice().sort(function (a, b) {
-      var ka = sortKey(a);
-      var kb = sortKey(b);
-      if (kb.end !== ka.end) return kb.end - ka.end;
-      return kb.start - ka.start;
+  function syncTypeButtons() {
+    typeButtons.forEach(function (btn) {
+      var v = btn.getAttribute("data-timeline-type");
+      if (!v || !Object.prototype.hasOwnProperty.call(typeSelected, v)) return;
+      var on = typeSelected[v];
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
 
-  function byCategory(item) {
-    if (state.category === TYPE_ALL) return true;
-    return item.type === state.category;
+  function getSearchQuery() {
+    if (!tagInput) return "";
+    return tagInput.value.trim().toLowerCase();
   }
 
-  function byTags(item) {
-    if (state.activeTags.size === 0) return true;
-    var t = item.tags && item.tags.length ? item.tags : [];
-    var need = [];
-    state.activeTags.forEach(function (tag) {
-      need.push(tag);
+  function allTags() {
+    var set = new Map();
+    data.forEach(function (item) {
+      (item.tags || []).forEach(function (t) {
+        var s = String(t).trim();
+        if (s) set.set(s.toLowerCase(), s);
+      });
     });
-    for (var i = 0; i < need.length; i++) {
-      if (t.indexOf(need[i]) === -1) return false;
+    return Array.from(set.values()).sort(function (a, b) {
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+  }
+
+  function tagListLower(item) {
+    return (item.tags || []).map(function (t) {
+      return String(t).toLowerCase();
+    });
+  }
+
+  function itemHasTagToken(item, tokenLower) {
+    if (tagListLower(item).indexOf(tokenLower) !== -1) return true;
+    return false;
+  }
+
+  function itemMatchesAllActiveTags(item) {
+    for (var i = 0; i < activeFilterTags.length; i++) {
+      var t = activeFilterTags[i];
+      if (!itemHasTagToken(item, t)) return false;
     }
     return true;
   }
 
+  function itemMatchesSearch(item) {
+    var q = getSearchQuery();
+    if (!q) return true;
+    var blob =
+      (item.title || "") +
+      " " +
+      (item.summary || "") +
+      " " +
+      (item.role || "") +
+      " " +
+      (item.tags || []).join(" ");
+    return blob.toLowerCase().indexOf(q) !== -1;
+  }
+
+  function itemMatchesFilter(item) {
+    var types = getSelectedTypes();
+    if (types.length === 0) return false;
+    if (item.type && types.indexOf(item.type) === -1) return false;
+    if (!itemMatchesAllActiveTags(item)) return false;
+    if (!itemMatchesSearch(item)) return false;
+    return true;
+  }
+
+  function linkClass(kind) {
+    if (kind === "play") return "btn btn-timeline btn-play";
+    if (kind === "github") return "btn btn-timeline btn-github";
+    return "btn btn-timeline";
+  }
+
   function typeLabel(t) {
     if (t === "work") return "Work";
-    if (t === "project") return "Project";
-    if (t === "game") return "Game";
-    return t;
+    if (t === "game") return "Game Dev";
+    if (t === "project") return "Experiences";
+    return t || "";
   }
 
-  function esc(s) {
-    if (s == null) return "";
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+  function itemCategoryBadgeText(item) {
+    if (Object.prototype.hasOwnProperty.call(item, "badge")) {
+      if (item.badge === null || item.badge === "") return null;
+      return String(item.badge);
+    }
+    return typeLabel(item.type);
   }
 
-  function renderCard(item) {
-    var hasPreview = item.preview && item.preview.image;
-    var draft = item.complete === false;
-    var links = item.links || {};
-    var extra = links.extra && Array.isArray(links.extra) ? links.extra : [];
-
-    var body =
-      '<article class="timeline-card' +
-      (draft ? " timeline-card--draft" : "") +
-      (hasPreview ? " timeline-card--has-preview" : "") +
-      '">' +
-      (hasPreview
-        ? '<div class="timeline-card__media"><img class="timeline-card__img" src="' +
-          esc(item.preview.image) +
-          '" alt="' +
-          esc(item.preview.alt || item.title) +
-          '" loading="lazy"></div>'
-        : "") +
-      '<div class="timeline-card__body">' +
-      '<span class="timeline-pill timeline-pill--' +
-      esc(item.type) +
-      '">' +
-      typeLabel(item.type) +
-      "</span>" +
-      (draft
-        ? '<span class="timeline-pill timeline-pill--draft">In progress</span>'
-        : "") +
-      "<h3>" +
-      esc(item.title) +
-      "</h3>" +
-      (item.organization
-        ? '<p class="timeline-card__org">' + esc(item.organization) + "</p>"
-        : "") +
-      '<p class="timeline-card__date">' +
-      formatRange(item.start, item.end) +
-      "</p>" +
-      (item.summary ? '<p class="timeline-card__summary">' + esc(item.summary) + "</p>" : "") +
-      '<ul class="timeline-chips" role="list">';
-
-    var tags = item.tags || [];
-    for (var i = 0; i < tags.length; i++) {
-      var tag = tags[i];
-      body +=
-        '<li><button type="button" class="tag-chip" data-tag="' +
-        esc(tag) +
-        '">' +
-        esc(tag) +
-        "</button></li>";
-    }
-    body += '</ul><div class="timeline-card__actions">';
-
-    if (links.play) {
-      body +=
-        '<a class="btn btn--small" href="' +
-        esc(links.play) +
-        '" target="_blank" rel="noopener">Play / Demo</a>';
-    }
-    if (links.github) {
-      body +=
-        '<a class="btn btn--outline btn--small" href="' +
-        esc(links.github) +
-        '" target="_blank" rel="noopener">GitHub</a>';
-    }
-    for (var j = 0; j < extra.length; j++) {
-      var ex = extra[j];
-      if (ex && ex.url) {
-        body +=
-          '<a class="btn btn--outline btn--small" href="' +
-          esc(ex.url) +
-          '" target="_blank" rel="noopener">' +
-          esc(ex.label || "Link") +
-          "</a>";
-      }
-    }
-    body += "</div></div></article>";
-    return body;
+  function addFilterTagFromCanonical(canonical) {
+    var key = String(canonical).trim().toLowerCase();
+    if (!key) return;
+    if (activeFilterTags.indexOf(key) !== -1) return;
+    activeFilterTags.push(key);
   }
 
-  function collectAllTags(list) {
-    var set = {};
-    for (var i = 0; i < list.length; i++) {
-      var tags = list[i].tags || [];
-      for (var j = 0; j < tags.length; j++) set[tags[j]] = true;
-    }
-    return Object.keys(set).sort();
+  function removeFilterTagAt(i) {
+    activeFilterTags.splice(i, 1);
   }
 
-  function updateTagFilterBar(allTags) {
-    var el = document.getElementById("tag-filter");
-    if (!el) return;
-    if (allTags.length === 0) {
-      el.innerHTML = "<p class=\"filter-empty\">No tags in this view.</p>";
+  function renderActiveTagBar() {
+    if (!activeTagBar) return;
+    activeTagBar.innerHTML = "";
+    if (!activeFilterTags.length) {
+      activeTagBar.hidden = true;
       return;
     }
-    var html = "";
-    for (var k = 0; k < allTags.length; k++) {
-      var t = allTags[k];
-      var on = state.activeTags.has(t);
-      html +=
-        "<button type=\"button\" class=\"filter-tag" +
-        (on ? " is-active" : "") +
-        "\" data-tag-filter=\"" +
-        esc(t) +
-        "\">" +
-        esc(t) +
-        "</button>";
-    }
-    if (state.activeTags.size) {
-      html += "<button type=\"button\" class=\"filter-clear\" id=\"clear-tags\">Clear tag filters</button>";
-    }
-    el.innerHTML = html;
-
-    el.querySelectorAll("[data-tag-filter]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var tag = btn.getAttribute("data-tag-filter");
-        if (state.activeTags.has(tag)) state.activeTags.delete(tag);
-        else state.activeTags.add(tag);
-        render();
-      });
-    });
-    var clearBtn = el.querySelector("#clear-tags");
-    if (clearBtn) {
-      clearBtn.addEventListener("click", function () {
-        state.activeTags.clear();
-        render();
-      });
-    }
-  }
-
-  function wireCategoryButtons() {
-    var wrap = document.getElementById("type-filter");
-    if (!wrap) return;
-    wrap.querySelectorAll("[data-type]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        state.category = b.getAttribute("data-type");
-        state.activeTags.clear();
-        render();
-        wrap.querySelectorAll("[data-type]").forEach(function (x) {
-          x.classList.toggle("is-active", x.getAttribute("data-type") === state.category);
-        });
-      });
-    });
-  }
-
-  function wireListDelegate() {
-    var root = document.getElementById("timeline-list");
-    if (root) {
-      root.addEventListener("click", function (e) {
-        var tagBtn = e.target.closest(".tag-chip[data-tag]");
-        if (tagBtn) {
-          e.preventDefault();
-          var t = tagBtn.getAttribute("data-tag");
-          state.activeTags.add(t);
-          var catBtn = document.querySelector(
-            "#type-filter [data-type='" + state.category + "']"
-          );
-          if (catBtn) {
-            document.querySelectorAll("#type-filter [data-type]").forEach(function (x) {
-              x.classList.toggle("is-active", x === catBtn);
-            });
-          }
-          render();
+    activeTagBar.hidden = false;
+    activeFilterTags.forEach(function (key, index) {
+      var display;
+      var canonicals = allTags();
+      for (var ci = 0; ci < canonicals.length; ci++) {
+        if (canonicals[ci].toLowerCase() === key) {
+          display = canonicals[ci];
+          break;
         }
+      }
+      if (display == null) display = key;
+      var wrap = document.createElement("span");
+      wrap.className = "active-filter-chip";
+      var label = document.createElement("span");
+      label.className = "active-filter-chip__text";
+      label.textContent = display;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "active-filter-chip__remove";
+      btn.setAttribute("aria-label", "Remove filter " + display);
+      btn.innerHTML = "&times;";
+      btn.addEventListener("click", function () {
+        removeFilterTagAt(index);
+        renderActiveTagBar();
+        render();
+        renderSuggestedTags();
       });
-    }
+      wrap.appendChild(label);
+      wrap.appendChild(btn);
+      activeTagBar.appendChild(wrap);
+    });
   }
 
   function render() {
-    var listEl = document.getElementById("timeline-list");
-    if (!listEl) return;
+    if (!container) return;
 
-    var catFiltered = state.items.filter(byCategory);
-    var tagsInView = collectAllTags(catFiltered);
-    state.activeTags.forEach(function (t) {
-      if (tagsInView.indexOf(t) === -1) state.activeTags.delete(t);
+    var sorted = data.slice().sort(function (a, b) {
+      var pinA = a.pinFirst ? 1 : 0;
+      var pinB = b.pinFirst ? 1 : 0;
+      if (pinA !== pinB) return pinB - pinA;
+      return parseSortKey(b) - parseSortKey(a);
     });
-    var filtered = sortedItems(catFiltered.filter(byTags));
-    updateTagFilterBar(tagsInView);
 
-    if (filtered.length === 0) {
-      listEl.innerHTML =
-        '<p class="filter-empty" role="status">No items match. Try a different type or clear tag filters.</p>';
-      return;
-    }
+    var list = sorted.filter(itemMatchesFilter);
 
-    var y = 0;
-    var html = '<div class="timeline-rail" aria-hidden="true"></div><ol class="timeline-ol">';
-    for (var i = 0; i < filtered.length; i++) {
-      var it = filtered[i];
-      y = (it.end || it.start || "")
-        .split("-")
-        .map(function (n) { return parseInt(n, 10) || 0; })[0] || y;
-      var dateStr = formatRange(it.start, it.end);
-      html +=
-        '<li class="timeline-item"><div class="timeline-item__date">' +
-        esc(dateStr) +
-        '</div><div class="timeline-item__line" aria-hidden="true"></div><div class="timeline-item__dot" aria-hidden="true"></div>' +
-        renderCard(it) +
-        "</li>";
-    }
-    html += "</ol>";
-    listEl.innerHTML = html;
+    container.innerHTML = "";
+    if (emptyState) emptyState.hidden = list.length > 0;
+
+    list.forEach(function (item, i) {
+      var article = document.createElement("article");
+      article.className = "timeline-card" + (item.status === "draft" ? " timeline-card--draft" : "");
+      article.setAttribute("data-id", item.id || "");
+      article.setAttribute("role", "listitem");
+      article.classList.add("timeline-card--with-spine");
+
+      var d = getItemSortDate(item);
+      var dPrev = i > 0 ? getItemSortDate(list[i - 1]) : null;
+      var isYearPeg = false;
+      if (d) {
+        if (i > 0 && dPrev) {
+          isYearPeg = d.getFullYear() !== dPrev.getFullYear();
+        } else if (i === 0) {
+          isYearPeg = true;
+        }
+      }
+      if (isYearPeg) {
+        article.classList.add("timeline-card--with-year-peg");
+      }
+
+      var isLeft = i % 2 === 0;
+      if (isLeft) {
+        article.classList.add("timeline-card--spine-outside-right");
+      } else {
+        article.classList.add("timeline-card--spine-outside-left");
+      }
+
+      var spine = document.createElement("div");
+      spine.className = "timeline__spine";
+      spine.setAttribute("aria-hidden", "true");
+      if (isYearPeg) {
+        var ypeg = document.createElement("div");
+        ypeg.className = "timeline__year-peg";
+        var ydot = document.createElement("span");
+        ydot.className = "timeline__year-peg__dot";
+        ypeg.appendChild(ydot);
+        var ytxt = document.createElement("span");
+        ytxt.className = "timeline__year-peg__text";
+        ytxt.textContent = d ? String(d.getFullYear()) : "—";
+        ypeg.appendChild(ytxt);
+        spine.appendChild(ypeg);
+      }
+      var mpeg = document.createElement("div");
+      mpeg.className = "timeline__month-peg";
+      if (d) {
+        mpeg.textContent = isYearPeg
+          ? SPINE_MONTHS[d.getMonth()]
+          : formatSpineMonthYear(d);
+      } else {
+        mpeg.textContent = "—";
+      }
+      spine.appendChild(mpeg);
+      article.appendChild(spine);
+
+      var inner = document.createElement("div");
+      var hasPreview = item.preview && String(item.preview).trim();
+      var posClass = isLeft ? " timeline-card__inner--left" : " timeline-card__inner--right";
+      if (hasPreview) {
+        inner.className = "timeline-card__inner" + posClass;
+        if (item.topRightLabel) inner.classList.add("timeline-card__inner--pos");
+        var media = document.createElement("div");
+        media.className = "timeline-card__media" + (item.id === "tech-academy-intern" ? " timeline-card__media--tech-academy" : "");
+        var img = document.createElement("img");
+        img.className = "timeline-card__preview";
+        img.src = item.preview;
+        img.alt = "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        media.appendChild(img);
+        inner.appendChild(media);
+      } else {
+        inner.className = "timeline-card__inner timeline-card__inner--text-only" + posClass;
+        if (item.topRightLabel) inner.classList.add("timeline-card__inner--pos");
+      }
+
+      if (item.topRightLabel) {
+        var corner = document.createElement("span");
+        corner.className = "timeline-card__top-right";
+        corner.textContent = String(item.topRightLabel);
+        corner.setAttribute("aria-label", "Label: " + String(item.topRightLabel));
+        inner.appendChild(corner);
+      }
+
+      var body = document.createElement("div");
+      body.className = "timeline-card__body";
+
+      var meta = document.createElement("div");
+      meta.className = "timeline-card__meta";
+      var timeEl = document.createElement("time");
+      timeEl.setAttribute("datetime", item.sortKey || "");
+      timeEl.textContent = item.dateLabel || "—";
+      meta.appendChild(timeEl);
+      var catText = itemCategoryBadgeText(item);
+      if (catText) {
+        var badge = document.createElement("span");
+        badge.className = "timeline-type timeline-type--" + (item.type || "other");
+        badge.textContent = catText;
+        meta.appendChild(badge);
+      }
+
+      var h3 = document.createElement("h3");
+      h3.className = "timeline-card__title";
+      h3.textContent = item.title || "Untitled";
+
+      if (item.role) {
+        var sub = document.createElement("p");
+        sub.className = "timeline-card__role";
+        sub.textContent = item.role;
+        body.appendChild(meta);
+        body.appendChild(h3);
+        body.appendChild(sub);
+      } else {
+        body.appendChild(meta);
+        body.appendChild(h3);
+      }
+
+      if (item.summary) {
+        var p = document.createElement("p");
+        p.className = "timeline-card__summary";
+        p.textContent = item.summary;
+        body.appendChild(p);
+      }
+
+      if (item.highlights && item.highlights.length) {
+        var ul = document.createElement("ul");
+        ul.className = "timeline-highlights";
+        item.highlights.forEach(function (line) {
+          var li = document.createElement("li");
+          li.textContent = line;
+          ul.appendChild(li);
+        });
+        body.appendChild(ul);
+      }
+
+      if (item.status === "draft") {
+        var note = document.createElement("p");
+        note.className = "timeline-draft-note";
+        note.textContent = "Work in progress — add details in js/timeline-data.js when you’re ready.";
+        body.appendChild(note);
+      }
+
+      var tagRow = document.createElement("div");
+      tagRow.className = "timeline-card__tags";
+      (item.tags || []).forEach(function (t) {
+        var chip = document.createElement("span");
+        chip.className = "chip timeline-chip";
+        chip.textContent = t;
+        chip.setAttribute("role", "listitem");
+        tagRow.appendChild(chip);
+      });
+      if (tagRow.children.length) body.appendChild(tagRow);
+
+      if (item.links && item.links.length) {
+        var actions = document.createElement("div");
+        actions.className = "timeline-actions";
+        item.links.forEach(function (link) {
+          var a = document.createElement("a");
+          a.className = linkClass(link.kind);
+          a.href = link.url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = link.label || "Link";
+          actions.appendChild(a);
+        });
+        body.appendChild(actions);
+      }
+
+      inner.appendChild(body);
+      article.appendChild(inner);
+      container.appendChild(article);
+    });
   }
 
-  function init(data) {
-    if (!data || !data.items) return;
-    state.items = data.items;
-    wireCategoryButtons();
-    wireListDelegate();
+  function renderSuggestedTags() {
+    if (!tagChips) return;
+    tagChips.innerHTML = "";
+    allTags().forEach(function (t) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "tag-suggestion";
+      b.textContent = t;
+      var tLower = t.toLowerCase();
+      var on = activeFilterTags.indexOf(tLower) !== -1;
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.addEventListener("click", function () {
+        if (activeFilterTags.indexOf(tLower) === -1) {
+          addFilterTagFromCanonical(t);
+        }
+        renderActiveTagBar();
+        render();
+        renderSuggestedTags();
+      });
+      tagChips.appendChild(b);
+    });
+  }
+
+  function onTypeButtonClick() {
+    var v = this.getAttribute("data-timeline-type");
+    if (!v || !Object.prototype.hasOwnProperty.call(typeSelected, v)) return;
+    var allOn =
+      typeSelected.work && typeSelected.project && typeSelected.game;
+    if (allOn) {
+      typeSelected.work = v === "work";
+      typeSelected.project = v === "project";
+      typeSelected.game = v === "game";
+    } else {
+      typeSelected[v] = !typeSelected[v];
+    }
+    syncTypeButtons();
     render();
   }
-
-  if (window.EXPERIENCES_DATA) {
-    document.addEventListener("DOMContentLoaded", function () {
-      init(window.EXPERIENCES_DATA);
+  typeButtons.forEach(function (btn) {
+    btn.addEventListener("click", onTypeButtonClick);
+  });
+  syncTypeButtons();
+  if (tagInput) {
+    tagInput.addEventListener("input", function () {
+      render();
     });
-  } else {
-    var path = document.body && document.body.getAttribute("data-experiences-url");
-    if (path) {
-      fetch(path)
-        .then(function (r) {
-          if (!r.ok) throw new Error("load");
-          return r.json();
-        })
-        .then(init)
-        .catch(function () {
-          var el = document.getElementById("timeline-list");
-          if (el) {
-            el.innerHTML =
-              '<p class="filter-empty">Could not load experiences. Open this site from a local or hosted URL (JSON fetch).</p>';
-          }
-        });
-    } else {
-      document.addEventListener("DOMContentLoaded", function () {
-        var el = document.getElementById("timeline-list");
-        if (el) {
-          el.innerHTML =
-            '<p class="filter-empty">Set data in data/experiences.json or use static hosting to see the full timeline.</p>';
-        }
-      });
-    }
   }
+  if (clearTagBtn) {
+    clearTagBtn.addEventListener("click", function () {
+      if (tagInput) tagInput.value = "";
+      activeFilterTags = [];
+      renderActiveTagBar();
+      render();
+      renderSuggestedTags();
+    });
+  }
+
+  renderActiveTagBar();
+  renderSuggestedTags();
+  render();
 })();
