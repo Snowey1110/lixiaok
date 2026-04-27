@@ -6,7 +6,8 @@
   var state = {
     items: [],
     category: TYPE_ALL,
-    activeTags: new Set()
+    activeTagList: [],
+    searchQuery: ""
   };
 
   function parseMonth(ym) {
@@ -34,6 +35,12 @@
     return monthNames[m - 1] + " " + y;
   }
 
+  function getItemYear(item) {
+    var s = item.end || item.start;
+    if (!s) return 0;
+    return parseInt(String(s).split("-")[0], 10) || 0;
+  }
+
   function sortKey(item) {
     var endM = item.end ? parseMonth(item.end) : 9999 * 12;
     var startM = item.start ? parseMonth(item.start) : 0;
@@ -54,17 +61,28 @@
     return item.type === state.category;
   }
 
-  function byTags(item) {
-    if (state.activeTags.size === 0) return true;
+  function itemHasAllTags(item) {
+    if (state.activeTagList.length === 0) return true;
     var t = item.tags && item.tags.length ? item.tags : [];
-    var need = [];
-    state.activeTags.forEach(function (tag) {
-      need.push(tag);
-    });
-    for (var i = 0; i < need.length; i++) {
-      if (t.indexOf(need[i]) === -1) return false;
+    for (var i = 0; i < state.activeTagList.length; i++) {
+      if (t.indexOf(state.activeTagList[i]) === -1) return false;
     }
     return true;
+  }
+
+  function buildSearchBlob(item) {
+    var parts = [item.title, item.organization, item.summary];
+    if (item.tags) parts = parts.concat(item.tags);
+    return parts
+      .filter(function (p) { return p != null && p !== ""; })
+      .join(" \n ")
+      .toLowerCase();
+  }
+
+  function bySearch(item) {
+    var q = (state.searchQuery || "").trim().toLowerCase();
+    if (!q) return true;
+    return buildSearchBlob(item).indexOf(q) !== -1;
   }
 
   function typeLabel(t) {
@@ -170,6 +188,41 @@
     return Object.keys(set).sort();
   }
 
+  function renderActiveTagPills() {
+    var el = document.getElementById("active-tag-pills");
+    if (!el) return;
+    if (state.activeTagList.length === 0) {
+      el.innerHTML = "";
+      el.setAttribute("hidden", "");
+      return;
+    }
+    el.removeAttribute("hidden");
+    var html = '<ul class="active-pills__list" role="list">';
+    for (var i = 0; i < state.activeTagList.length; i++) {
+      var t = state.activeTagList[i];
+      html +=
+        '<li class="active-pill">' +
+        '<span class="active-pill__text">' +
+        esc(t) +
+        '</span><button type="button" class="active-pill__remove" data-remove-tag="' +
+        esc(t) +
+        '" aria-label="Remove ' +
+        esc(t) +
+        ' from filters">&times;</button></li>';
+    }
+    html += "</ul>";
+    el.innerHTML = html;
+
+    el.querySelectorAll("[data-remove-tag]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var tag = btn.getAttribute("data-remove-tag");
+        var idx = state.activeTagList.indexOf(tag);
+        if (idx !== -1) state.activeTagList.splice(idx, 1);
+        render();
+      });
+    });
+  }
+
   function updateTagFilterBar(allTags) {
     var el = document.getElementById("tag-filter");
     if (!el) return;
@@ -180,7 +233,7 @@
     var html = "";
     for (var k = 0; k < allTags.length; k++) {
       var t = allTags[k];
-      var on = state.activeTags.has(t);
+      var on = state.activeTagList.indexOf(t) !== -1;
       html +=
         "<button type=\"button\" class=\"filter-tag" +
         (on ? " is-active" : "") +
@@ -190,26 +243,25 @@
         esc(t) +
         "</button>";
     }
-    if (state.activeTags.size) {
-      html += "<button type=\"button\" class=\"filter-clear\" id=\"clear-tags\">Clear tag filters</button>";
-    }
     el.innerHTML = html;
 
     el.querySelectorAll("[data-tag-filter]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var tag = btn.getAttribute("data-tag-filter");
-        if (state.activeTags.has(tag)) state.activeTags.delete(tag);
-        else state.activeTags.add(tag);
+        state.activeTagList = state.activeTagList.filter(function (t) { return t !== tag; });
+        state.activeTagList.push(tag);
         render();
       });
     });
-    var clearBtn = el.querySelector("#clear-tags");
-    if (clearBtn) {
-      clearBtn.addEventListener("click", function () {
-        state.activeTags.clear();
-        render();
-      });
-    }
+  }
+
+  function wireSearch() {
+    var input = document.getElementById("timeline-search");
+    if (!input) return;
+    input.addEventListener("input", function () {
+      state.searchQuery = input.value;
+      render();
+    });
   }
 
   function wireCategoryButtons() {
@@ -218,7 +270,7 @@
     wrap.querySelectorAll("[data-type]").forEach(function (b) {
       b.addEventListener("click", function () {
         state.category = b.getAttribute("data-type");
-        state.activeTags.clear();
+        state.activeTagList = [];
         render();
         wrap.querySelectorAll("[data-type]").forEach(function (x) {
           x.classList.toggle("is-active", x.getAttribute("data-type") === state.category);
@@ -231,23 +283,99 @@
     var root = document.getElementById("timeline-list");
     if (root) {
       root.addEventListener("click", function (e) {
+        var removeOnly = e.target.closest(".active-pill__remove");
+        if (removeOnly) return;
         var tagBtn = e.target.closest(".tag-chip[data-tag]");
         if (tagBtn) {
           e.preventDefault();
           var t = tagBtn.getAttribute("data-tag");
-          state.activeTags.add(t);
-          var catBtn = document.querySelector(
-            "#type-filter [data-type='" + state.category + "']"
-          );
-          if (catBtn) {
-            document.querySelectorAll("#type-filter [data-type]").forEach(function (x) {
-              x.classList.toggle("is-active", x === catBtn);
-            });
-          }
+          state.activeTagList = state.activeTagList.filter(function (x) { return x !== t; });
+          state.activeTagList.push(t);
           render();
         }
       });
     }
+  }
+
+  function groupByYearDesc(items) {
+    var byYear = {};
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var y = getItemYear(it) || 0;
+      if (!byYear[y]) byYear[y] = [];
+      byYear[y].push(it);
+    }
+    var years = Object.keys(byYear)
+      .map(function (k) { return parseInt(k, 10); })
+      .filter(function (y) { return y > 0; })
+      .sort(function (a, b) { return b - a; });
+    if (byYear[0] && byYear[0].length) {
+      years.push(0);
+    }
+    return { byYear: byYear, years: years };
+  }
+
+  function renderHorizontalTimeline(filtered) {
+    var g = groupByYearDesc(filtered);
+    if (g.years.length === 0) {
+      return '<p class="filter-empty" role="status">No results.</p>';
+    }
+
+    var out =
+      '<div class="h-timeline__scroller" tabindex="0">' +
+      '<div class="h-timeline__flow" role="presentation">';
+
+    for (var yIdx = 0; yIdx < g.years.length; yIdx++) {
+      var year = g.years[yIdx];
+      var yearItems = sortedItems(g.byYear[year] || []);
+      if (!yearItems.length) continue;
+      if (yIdx > 0) {
+        out += '<div class="h-timeline__between" aria-hidden="true"><div class="h-timeline__between-line"></div></div>';
+      }
+
+      var n = yearItems.length;
+      var yLabel = year > 0 ? String(year) : "Other";
+
+      out +=
+        '<section class="h-year" data-year="' +
+        esc(String(year)) +
+        '" aria-label="' +
+        esc(yLabel) +
+        '">' +
+        '<h3 class="h-year__label">' +
+        esc(yLabel) +
+        "</h3>" +
+        '<div class="h-year__grid" style="grid-template-columns: repeat(' +
+        n +
+        ', minmax(200px, 1fr))">';
+
+      for (var c = 0; c < n; c++) {
+        var isUp = c % 2 === 0;
+        if (isUp) {
+          out += '<div class="h-year__cell h-year__cell--up">' + renderCard(yearItems[c]) + "</div>";
+        } else {
+          out += "<div class=\"h-year__cell h-year__cell--emp\"></div>";
+        }
+      }
+
+      for (var t = 0; t < n; t++) {
+        out += '<div class="h-year__trunk" aria-hidden="true"><span class="h-year__dot"></span></div>';
+      }
+
+      for (var b = 0; b < n; b++) {
+        var isDown = b % 2 === 1;
+        if (isDown) {
+          out += '<div class="h-year__cell h-year__cell--down">' + renderCard(yearItems[b]) + "</div>";
+        } else {
+          out += "<div class=\"h-year__cell h-year__cell--emp\"></div>";
+        }
+      }
+
+      out += "</div></section>";
+    }
+
+    out += "</div></div>";
+    return out;
   }
 
   function render() {
@@ -256,40 +384,29 @@
 
     var catFiltered = state.items.filter(byCategory);
     var tagsInView = collectAllTags(catFiltered);
-    state.activeTags.forEach(function (t) {
-      if (tagsInView.indexOf(t) === -1) state.activeTags.delete(t);
+    var valid = {};
+    for (var vi = 0; vi < tagsInView.length; vi++) valid[tagsInView[vi]] = true;
+    state.activeTagList = state.activeTagList.filter(function (t) {
+      return valid[t];
     });
-    var filtered = sortedItems(catFiltered.filter(byTags));
+
+    var searchFiltered = catFiltered.filter(bySearch);
+    var filtered = sortedItems(searchFiltered.filter(itemHasAllTags));
     updateTagFilterBar(tagsInView);
+    renderActiveTagPills();
 
     if (filtered.length === 0) {
-      listEl.innerHTML =
-        '<p class="filter-empty" role="status">No items match. Try a different type or clear tag filters.</p>';
+      listEl.innerHTML = '<p class="filter-empty" role="status">No results.</p>';
       return;
     }
 
-    var y = 0;
-    var html = '<div class="timeline-rail" aria-hidden="true"></div><ol class="timeline-ol">';
-    for (var i = 0; i < filtered.length; i++) {
-      var it = filtered[i];
-      y = (it.end || it.start || "")
-        .split("-")
-        .map(function (n) { return parseInt(n, 10) || 0; })[0] || y;
-      var dateStr = formatRange(it.start, it.end);
-      html +=
-        '<li class="timeline-item"><div class="timeline-item__date">' +
-        esc(dateStr) +
-        '</div><div class="timeline-item__line" aria-hidden="true"></div><div class="timeline-item__dot" aria-hidden="true"></div>' +
-        renderCard(it) +
-        "</li>";
-    }
-    html += "</ol>";
-    listEl.innerHTML = html;
+    listEl.innerHTML = renderHorizontalTimeline(filtered);
   }
 
   function init(data) {
     if (!data || !data.items) return;
     state.items = data.items;
+    wireSearch();
     wireCategoryButtons();
     wireListDelegate();
     render();
@@ -311,16 +428,14 @@
         .catch(function () {
           var el = document.getElementById("timeline-list");
           if (el) {
-            el.innerHTML =
-              '<p class="filter-empty">Could not load experiences. Open this site from a local or hosted URL (JSON fetch).</p>';
+            el.innerHTML = '<p class="filter-empty">Unable to load projects.</p>';
           }
         });
     } else {
       document.addEventListener("DOMContentLoaded", function () {
         var el = document.getElementById("timeline-list");
         if (el) {
-          el.innerHTML =
-            '<p class="filter-empty">Set data in data/experiences.json or use static hosting to see the full timeline.</p>';
+          el.innerHTML = '<p class="filter-empty">Unable to load projects.</p>';
         }
       });
     }
