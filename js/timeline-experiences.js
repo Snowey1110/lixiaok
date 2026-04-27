@@ -48,7 +48,7 @@ var TIMELINE_EXPERIENCES = [
     preview: { image: "images/hero.png", alt: "Hero Next Generation" },
     playUrl:
       "https://github.com/Snowey1110/CSS385/tree/main/Next%20Generation%20Hero",
-    playLabel: "Source / play",
+    playLabel: "Play now!",
     tags: ["Unity", "2D", "Boss design"]
   },
   {
