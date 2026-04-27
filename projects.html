@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Projects | Lixiao Kuang</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects & Timeline | Lixiao Kuang</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Orbitron:wght@600&display=swap">
   <link rel="stylesheet" href="css/style.css">
@@ -14,21 +15,25 @@
     gtag('js', new Date());
     gtag('config', 'G-MWFHJLJY8Y');
   </script>
-
 </head>
-<body>
+<body data-experiences-url="data/experiences.json">
   <div id="particles-js"></div>
   <nav class="game-nav" id="navbar">
     <ul>
       <li><a href="index.html">Home</a></li>
-      <li><a href="projects.html">Projects</a></li>
+      <li><a href="projects.html" aria-current="page">Projects</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
   </nav>
   <main class="fade-in">
-    <section class="skills">
-      <h2>Skills & Languages</h2>
+    <header class="timeline-header">
+      <h1>Experience &amp; project timeline</h1>
+      <p class="timeline-header__lede">Work, project work, and games in one place. Filter by type, then click tags to narrow the list, or add new entries in <code>data/experiences.json</code> (minimal fields first; you can add preview images and links when they are ready).</p>
+    </header>
+
+    <section class="skills" aria-label="Skills">
+      <h2>Skills &amp; languages</h2>
       <div class="skill-icons">
         <img src="images/unity.png" alt="Unity" title="Unity" class="skill-icon-img">
         <i class="devicon-csharp-plain colored" title="C#"></i>
@@ -41,66 +46,23 @@
         <i class="devicon-java-plain colored" title="Java"></i>
       </div>
     </section>
-    <section class="projects">
-      <h2>Projects & Experiences</h2>
-      <div class="project-grid">
 
-        <div class="project-card img-fade-card">
-          <img src="images/udub.png" alt="UDubMinecraft Screenshot" class="card-bgimg" />
-          <h3>UDubMinecraft</h3>
-          <p>
-            As Vice-President of UDub Minecraft (UW Seattle, 2000+ members), I led server operations, managed events, and ensured a welcoming, fair, and creative club community.
-          </p>
-          <div>
-            <span class="chip">Leadership</span>
-            <span class="chip">Project Management</span>
-          </div>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/385Pic.png" alt="Spring is Coming Screenshot" class="card-bgimg" />
-          <h3>Spring is Coming</h3>
-          <p>Unity 2D Tower Defense Team Project</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://snowey1110.github.io/385TeamProject/Final%20Project/" class="btn" target="_blank" rel="noopener">Play Demo</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/hero.png" alt="Hero Next Generation Screenshot" class="card-bgimg" />
-          <h3>Hero Next Generation</h3>
-          <p>Unity 2D aircraft battle game with boss battle</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://github.com/Snowey1110/CSS385/tree/main/Next%20Generation%20Hero" class="btn" target="_blank" rel="noopener">Play Now!</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/496Pic.png" alt="Project PathER Screenshot" class="card-bgimg" />
-          <h3>Project PathER</h3>
-          <p>Unity 2D Roguelike RPG game prototype</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://github.com/Snowey1110/ProjectPathER" class="btn" target="_blank" rel="noopener">GitHub</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/traversal.png" alt="Traversal Screenshot" class="card-bgimg" />
-          <h3>Traversal</h3>
-          <p>Digipen C++ team project: 3D parkour speedrun game.</p>
-          <div><span class="chip">C++</span></div>
-          <a href="https://drive.google.com/file/d/1_aT4Z8svILOigDedk7etIbKmJJ85XSFH/view?usp=drive_link" class="btn" target="_blank" rel="noopener">Installer</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/tech.png" alt="Tech Academy Screenshot" class="card-bgimg" />
-          <h3>Tech Academy</h3>
-          <p>Teaching coding, robotics & 3D modeling to elementary students.</p>
-          <div>
-            <span class="chip">Python</span>
-            <span class="chip">Java</span>
-            <span class="chip">Robotics</span>
-          </div>
-        </div>
-
+    <section class="projects timeline-section" aria-label="Project and work timeline">
+      <h2>Timeline</h2>
+      <div class="type-filter" id="type-filter" role="group" aria-label="Filter by experience type">
+        <button type="button" class="type-btn is-active" data-type="all">All</button>
+        <button type="button" class="type-btn" data-type="work">Work</button>
+        <button type="button" class="type-btn" data-type="project">Projects</button>
+        <button type="button" class="type-btn" data-type="game">Game projects</button>
       </div>
+      <div class="tag-filter" id="tag-filter" role="group" aria-label="Filter by tags" aria-live="polite">
+        <p class="filter-loading">Loading tags</p>
+      </div>
+      <div class="how-to-add" role="region" aria-label="How to add an experience">
+        <h3>Add or edit entries</h3>
+        <p>Copy a block in <code>data/experiences.json</code>, set <code>id</code>, <code>type</code> (<code>work</code>, <code>project</code>, or <code>game</code>), <code>title</code>, <code>start</code> / <code>end</code> (YYYY-MM or omit <code>end</code> for ongoing), and <code>summary</code>. Add <code>preview</code> with an image path, <code>tags</code>, and <code>links</code> (<code>play</code>, <code>github</code>, or <code>extra</code> with label and url) when ready. Set <code>complete: false</code> for drafts; they will show an &ldquo;In progress&rdquo; badge until you set <code>complete: true</code> (or remove the key).</p>
+      </div>
+      <div id="timeline-list" class="timeline"></div>
     </section>
   </main>
   <footer>
@@ -109,5 +71,6 @@
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="js/particles-init.js"></script>
   <script src="js/fadein.js"></script>
+  <script src="js/timeline.js"></script>
 </body>
 </html>

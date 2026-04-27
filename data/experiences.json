@@ -1,0 +1,108 @@
+{
+  "items": [
+    {
+      "id": "udub-minecraft",
+      "type": "work",
+      "title": "Vice President — UDubMinecraft",
+      "organization": "University of Washington",
+      "start": "2021-09",
+      "end": "2023-06",
+      "summary": "Led server operations, managed events, and helped keep a welcoming, fair, and creative community for 2000+ members.",
+      "complete": true,
+      "tags": ["Leadership", "Community", "Minecraft"],
+      "preview": {
+        "image": "images/udub.png",
+        "alt": "UDubMinecraft"
+      }
+    },
+    {
+      "id": "tech-academy",
+      "type": "work",
+      "title": "Instructor",
+      "organization": "Tech Academy",
+      "start": "2019-06",
+      "end": "2020-08",
+      "summary": "Taught coding, robotics, and 3D modeling to elementary students.",
+      "complete": true,
+      "tags": ["Python", "Java", "Robotics", "Education"],
+      "preview": {
+        "image": "images/tech.png",
+        "alt": "Tech Academy"
+      }
+    },
+    {
+      "id": "spring-is-coming",
+      "type": "project",
+      "title": "Spring is Coming",
+      "organization": "Team project (CSS 385)",
+      "start": "2023-03",
+      "end": "2023-06",
+      "summary": "Unity 2D tower defense team project.",
+      "complete": true,
+      "tags": ["Unity", "2D", "Team"],
+      "preview": {
+        "image": "images/385Pic.png",
+        "alt": "Spring is Coming"
+      },
+      "links": {
+        "play": "https://snowey1110.github.io/385TeamProject/Final%20Project/"
+      }
+    },
+    {
+      "id": "path-er",
+      "type": "project",
+      "title": "Project PathER",
+      "organization": "Solo / coursework",
+      "start": "2022-10",
+      "end": "2022-12",
+      "summary": "Unity 2D roguelike RPG game prototype.",
+      "complete": true,
+      "tags": ["Unity", "Roguelike", "Prototype"],
+      "preview": {
+        "image": "images/496Pic.png",
+        "alt": "Project PathER"
+      },
+      "links": {
+        "github": "https://github.com/Snowey1110/ProjectPathER"
+      }
+    },
+    {
+      "id": "hero-next-gen",
+      "type": "game",
+      "title": "Hero Next Generation",
+      "organization": "CSS 385",
+      "start": "2022-01",
+      "end": "2022-03",
+      "summary": "Unity 2D aircraft battle game with a boss battle.",
+      "complete": true,
+      "tags": ["Unity", "2D", "Shooter"],
+      "preview": {
+        "image": "images/hero.png",
+        "alt": "Hero Next Generation"
+      },
+      "links": {
+        "play": "https://github.com/Snowey1110/CSS385/tree/main/Next%20Generation%20Hero"
+      }
+    },
+    {
+      "id": "traversal",
+      "type": "game",
+      "title": "Traversal",
+      "organization": "DigiPen team project",
+      "start": "2021-01",
+      "end": "2021-04",
+      "summary": "C++ team project: 3D parkour speedrun game.",
+      "complete": true,
+      "tags": ["C++", "3D", "Parkour"],
+      "preview": {
+        "image": "images/traversal.png",
+        "alt": "Traversal"
+      },
+      "links": {
+        "extra": [
+          { "label": "Download", "url": "https://drive.google.com/file/d/1_aT4Z8svILOigDedk7etIbKmJJ85XSFH/view?usp=drive_link" }
+        ]
+      }
+    }
+  ]
+}
