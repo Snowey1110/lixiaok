@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projects | Lixiao Kuang</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Orbitron:wght@600&display=swap">
@@ -14,7 +15,6 @@
     gtag('js', new Date());
     gtag('config', 'G-MWFHJLJY8Y');
   </script>
-
 </head>
 <body>
   <div id="particles-js"></div>
@@ -28,7 +28,7 @@
   </nav>
   <main class="fade-in">
     <section class="skills">
-      <h2>Skills & Languages</h2>
+      <h2>Skills &amp; Languages</h2>
       <div class="skill-icons">
         <img src="images/unity.png" alt="Unity" title="Unity" class="skill-icon-img">
         <i class="devicon-csharp-plain colored" title="C#"></i>
@@ -41,66 +41,32 @@
         <i class="devicon-java-plain colored" title="Java"></i>
       </div>
     </section>
-    <section class="projects">
-      <h2>Projects & Experiences</h2>
-      <div class="project-grid">
 
-        <div class="project-card img-fade-card">
-          <img src="images/udub.png" alt="UDubMinecraft Screenshot" class="card-bgimg" />
-          <h3>UDubMinecraft</h3>
-          <p>
-            As Vice-President of UDub Minecraft (UW Seattle, 2000+ members), I led server operations, managed events, and ensured a welcoming, fair, and creative club community.
-          </p>
-          <div>
-            <span class="chip">Leadership</span>
-            <span class="chip">Project Management</span>
-          </div>
+    <section class="projects projects-timeline-section">
+      <h2>Timeline — Work &amp; Projects</h2>
+      <p class="timeline-lead">Filter by type, then narrow by tag. New rows start as a short summary and dates; you can add images, links, and tags any time in <code>js/timeline-data.js</code>.</p>
+
+      <details class="add-experience-hint">
+        <summary>How to add a new line on the timeline</summary>
+        <p>Open <code>js/timeline-data.js</code> and push another object into <code>TIMELINE_EXPERIENCES</code>. Set <code>type</code> to <code>work</code>, <code>project</code>, or <code>game</code>, write <code>summary</code> and <code>dateStart</code> / <code>dateEnd</code>, and use <code>draft: true</code> until you add a preview and links. You can also describe what you need in chat and the entry can be filled in here for you.</p>
+      </details>
+
+      <form class="timeline-toolbar" id="filter-form" aria-label="Filter timeline">
+        <div class="filter-group" role="group" aria-label="Experience type">
+          <span class="filter-label">Show</span>
+          <button type="button" class="btn filter-btn is-active" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="btn filter-btn" data-filter="work" aria-pressed="false">Work</button>
+          <button type="button" class="btn filter-btn" data-filter="project" aria-pressed="false">Project experience</button>
+          <button type="button" class="btn filter-btn" data-filter="game" aria-pressed="false">Game projects</button>
         </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/385Pic.png" alt="Spring is Coming Screenshot" class="card-bgimg" />
-          <h3>Spring is Coming</h3>
-          <p>Unity 2D Tower Defense Team Project</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://snowey1110.github.io/385TeamProject/Final%20Project/" class="btn" target="_blank" rel="noopener">Play Demo</a>
+        <div class="tag-filter-block">
+          <label class="filter-label" for="timeline-tag-search">Tag filter</label>
+          <input type="search" id="timeline-tag-search" class="timeline-tag-input" placeholder="Type to match a tag (e.g. Unity)…" autocomplete="off" />
         </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/hero.png" alt="Hero Next Generation Screenshot" class="card-bgimg" />
-          <h3>Hero Next Generation</h3>
-          <p>Unity 2D aircraft battle game with boss battle</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://github.com/Snowey1110/CSS385/tree/main/Next%20Generation%20Hero" class="btn" target="_blank" rel="noopener">Play Now!</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/496Pic.png" alt="Project PathER Screenshot" class="card-bgimg" />
-          <h3>Project PathER</h3>
-          <p>Unity 2D Roguelike RPG game prototype</p>
-          <div><span class="chip">Unity</span></div>
-          <a href="https://github.com/Snowey1110/ProjectPathER" class="btn" target="_blank" rel="noopener">GitHub</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/traversal.png" alt="Traversal Screenshot" class="card-bgimg" />
-          <h3>Traversal</h3>
-          <p>Digipen C++ team project: 3D parkour speedrun game.</p>
-          <div><span class="chip">C++</span></div>
-          <a href="https://drive.google.com/file/d/1_aT4Z8svILOigDedk7etIbKmJJ85XSFH/view?usp=drive_link" class="btn" target="_blank" rel="noopener">Installer</a>
-        </div>
-
-        <div class="project-card img-fade-card">
-          <img src="images/tech.png" alt="Tech Academy Screenshot" class="card-bgimg" />
-          <h3>Tech Academy</h3>
-          <p>Teaching coding, robotics & 3D modeling to elementary students.</p>
-          <div>
-            <span class="chip">Python</span>
-            <span class="chip">Java</span>
-            <span class="chip">Robotics</span>
-          </div>
-        </div>
-
-      </div>
+      </form>
+      <div class="tag-chip-bar" id="timeline-tag-chips" aria-label="Quick tag filters"></div>
+      <p class="timeline-empty" id="timeline-empty" hidden>No entries match this filter. Try &ldquo;All&rdquo; or clear the tag field.</p>
+      <ol class="timeline" id="timeline-list"></ol>
     </section>
   </main>
   <footer>
@@ -108,6 +74,8 @@
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="js/particles-init.js"></script>
+  <script src="js/timeline-data.js"></script>
+  <script src="js/timeline.js"></script>
   <script src="js/fadein.js"></script>
 </body>
 </html>
